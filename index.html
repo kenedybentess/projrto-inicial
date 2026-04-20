@@ -145,6 +145,8 @@ if(sessao !== "ok"){
 <br>
 <button onclick="salvar()">Salvar</button>
 </div>
+📷 Ler Código de Barras
+</button>
  <!-- MODAL DA CÂMERA -->
 
 
@@ -257,80 +259,48 @@ function fecharCamera(){
 let estoque = JSON.parse(localStorage.getItem("estoque_bentes") || "{}");
 let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
 
-<script>
 function salvar(){
 
- let produto   = document.getElementById("produto").value.trim();
+ let produto = document.getElementById("produto").value.trim();
  let descricao = document.getElementById("descricao").value.trim();
- let codigo    = document.getElementById("codigo").value.trim();
- let tipo      = document.getElementById("tipo").value;
- let qtd       = parseInt(document.getElementById("qtd").value);
- let minimo    = parseInt(document.getElementById("minimo").value) || 0;
+ let codigo = document.getElementById("codigo").value.trim();
+ let tipo = document.getElementById("tipo").value;
+ let qtd = parseInt(document.getElementById("qtd").value);
+ let minimo = parseInt(document.getElementById("minimo").value) || 0;
 
- /* VALIDAÇÃO */
-
- if(!codigo || !qtd){
-    alert("Preencha código e quantidade.");
-    return;
+ if(!produto || !codigo || !qtd){
+   alert("Preencha todos os campos");
+   return;
  }
 
- /* SE FOR ENTRADA */
+ if(!estoque[produto]){
+   estoque[produto] = {
+     descricao:descricao,
+     codigo:codigo,
+     saldo:0,
+     minimo:minimo
+   };
+ }
+
+ estoque[produto].descricao = descricao;
+ estoque[produto].codigo = codigo;
+ estoque[produto].minimo = minimo;
+
  if(tipo === "Entrada"){
+   estoque[produto].saldo += qtd;
+ }else{
+   estoque[produto].saldo -= qtd;
 
-    if(!produto || !descricao){
-       alert("Preencha produto e descrição.");
-       return;
-    }
-
-    if(!estoque[produto]){
-       estoque[produto] = {
-          descricao: descricao,
-          codigo: codigo,
-          saldo: 0,
-          minimo: minimo
-       };
-    }
-
-    estoque[produto].descricao = descricao;
-    estoque[produto].codigo = codigo;
-    estoque[produto].minimo = minimo;
-    estoque[produto].saldo += qtd;
- }
-
- /* SE FOR SAÍDA */
- else{
-
-    let encontrado = false;
-
-    for(let p in estoque){
-
-       if(estoque[p].codigo == codigo){
-
-          estoque[p].saldo -= qtd;
-
-          if(estoque[p].saldo < 0){
-             estoque[p].saldo = 0;
-          }
-
-          produto = p;
-          descricao = estoque[p].descricao;
-
-          encontrado = true;
-          break;
-       }
-    }
-
-    if(!encontrado){
-       alert("Código não encontrado.");
-       return;
-    }
+   if(estoque[produto].saldo < 0){
+      estoque[produto].saldo = 0;
+   }
  }
 
  historico.push({
-    data:new Date().toLocaleString(),
-    produto,
-    tipo,
-    qtd
+   data:new Date().toLocaleString(),
+   produto,
+   tipo,
+   qtd
  });
 
  localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
@@ -338,7 +308,6 @@ function salvar(){
 
  location.reload();
 }
-</script>
 
 function excluirProduto(produto){
 
