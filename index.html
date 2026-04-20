@@ -5,6 +5,70 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Controle de Estoque Empresarial Bentes</title>
 
+ <!-- IMPORTAÇÃO EXCEL FORMATO SAP -->
+<hr>
+<h3>Importar Lista SAP / Excel</h3>
+
+<input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv">
+<br><br>
+<button onclick="importarExcelSAP()">Importar Arquivo</button>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script>
+function importarExcelSAP(){
+
+ const arquivo = document.getElementById("arquivoExcel").files[0];
+
+ if(!arquivo){
+   alert("Selecione o arquivo.");
+   return;
+ }
+
+ const reader = new FileReader();
+
+ reader.onload = function(e){
+
+   const data = new Uint8Array(e.target.result);
+   const workbook = XLSX.read(data,{type:'array'});
+   const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+   const linhas = XLSX.utils.sheet_to_json(sheet);
+
+   let total = 0;
+
+   linhas.forEach(item=>{
+
+      const codigo = item["Nº componente"] || "";
+      const descricao = item["Texto breve objeto"] || "";
+      const saldo = parseInt(item["Qtd.componente (UMC)"] || 0);
+
+      if(codigo && descricao){
+
+         estoque[codigo] = {
+            descricao: descricao,
+            codigo: codigo,
+            saldo: saldo,
+            minimo: 1
+         };
+
+         total++;
+      }
+
+   });
+
+   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+
+   alert(total + " produtos importados com sucesso!");
+
+   location.reload();
+
+ };
+
+ reader.readAsArrayBuffer(arquivo);
+}
+</script>
+
 <style>
 body{margin:0;font-family:Arial;background:#eef3f8}
 header{background:#0f3d91;color:#fff;padding:20px}
