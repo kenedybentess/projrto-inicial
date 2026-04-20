@@ -133,6 +133,9 @@ if(sessao !== "ok"){
 
 <br>
 <button onclick="salvar()">Salvar</button>
+ <button onclick="excluirTudo()" style="background:red;">
+ Excluir Todos
+</button>
 </div>
 
 <div class="card">
@@ -320,6 +323,20 @@ function carregar(){
 
 carregar();
 </script>
+<script>
+function excluirTudo(){
 
+ if(confirm("Deseja apagar TODO o estoque e histórico?")){
+
+   localStorage.removeItem("estoque_bentes");
+   localStorage.removeItem("historico_bentes");
+
+   alert("Todos os dados foram apagados!");
+
+   location.reload();
+ }
+
+}
+</script>
 </body>
 </html>
