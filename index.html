@@ -68,6 +68,9 @@ if(sessao !== "ok"){
 <button onclick="salvar()">Salvar</button>
 </div>
 
+<!-- SUBSTITUA A TABELA ESTOQUE E AS FUNÇÕES JS -->
+
+<!-- TABELA ESTOQUE -->
 <div class="card">
 <h3>Estoque Atual</h3>
 <table>
@@ -78,12 +81,77 @@ if(sessao !== "ok"){
 <th>Saldo</th>
 <th>Mínimo</th>
 <th>Status</th>
+<th>Ações</th>
 </tr>
 </thead>
 <tbody id="estoque"></tbody>
 </table>
 </div>
 
+<script>
+function excluirProduto(produto){
+   if(confirm("Deseja excluir " + produto + "?")){
+      delete estoque[produto];
+      localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+      location.reload();
+   }
+}
+
+function editarProduto(produto){
+   let novoNome = prompt("Novo nome:", produto);
+   let novoCodigo = prompt("Novo código:", estoque[produto].codigo);
+   let novoMinimo = prompt("Novo mínimo:", estoque[produto].minimo);
+
+   if(!novoNome) return;
+
+   estoque[novoNome] = {
+      codigo: novoCodigo,
+      saldo: estoque[produto].saldo,
+      minimo: parseInt(novoMinimo)
+   };
+
+   if(novoNome !== produto){
+      delete estoque[produto];
+   }
+
+   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+   location.reload();
+}
+
+function carregar(){
+ let html="";
+ let crit=0;
+ let total=0;
+
+ for(let p in estoque){
+   total++;
+   let item = estoque[p];
+
+   let status = item.saldo <= item.minimo
+      ? "<span class='alerta'>REPOR</span>"
+      : "<span class='ok'>OK</span>";
+
+   if(item.saldo <= item.minimo) crit++;
+
+   html += `<tr>
+     <td>${p}</td>
+     <td>${item.codigo}</td>
+     <td>${item.saldo}</td>
+     <td>${item.minimo}</td>
+     <td>${status}</td>
+     <td>
+       <button onclick="editarProduto('${p}')">Editar</button>
+       <button onclick="excluirProduto('${p}')">Excluir</button>
+     </td>
+   </tr>`;
+ }
+
+ document.getElementById("estoque").innerHTML = html;
+ document.getElementById("produtos").innerText = total;
+ document.getElementById("criticos").innerText = crit;
+ document.getElementById("movs").innerText = historico.length;
+}
+</script>
 <div class="card">
 <h3>Histórico</h3>
 <table>
