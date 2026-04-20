@@ -238,54 +238,29 @@ function excluirProduto(produto){
  }
 }
 
-<script>
 function editarProduto(produto){
 
  let novoNome = prompt("Novo nome:", produto);
  if(!novoNome) return;
 
- let novaDescricao = prompt(
-   "Descrição:",
-   estoque[produto].descricao
- );
-
- let novoCodigo = prompt(
-   "Novo código:",
-   estoque[produto].codigo
- );
-
- let novaQuantidade = prompt(
-   "Quantidade atual:",
-   estoque[produto].saldo
- );
-
- let novoMinimo = prompt(
-   "Estoque mínimo:",
-   estoque[produto].minimo
- );
+ let novaDescricao = prompt("Descrição:", estoque[produto].descricao);
+ let novoCodigo = prompt("Novo código:", estoque[produto].codigo);
+ let novoMinimo = prompt("Novo mínimo:", estoque[produto].minimo);
 
  estoque[novoNome] = {
-   descricao: novaDescricao,
-   codigo: novoCodigo,
-   saldo: parseInt(novaQuantidade) || 0,
-   minimo: parseInt(novoMinimo) || 0
+   descricao:novaDescricao,
+   codigo:novoCodigo,
+   saldo:estoque[produto].saldo,
+   minimo:parseInt(novoMinimo)
  };
 
  if(novoNome !== produto){
    delete estoque[produto];
  }
 
- localStorage.setItem(
-   "estoque_bentes",
-   JSON.stringify(estoque)
- );
-
- alert("Produto alterado com sucesso!");
+ localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
 
  location.reload();
-}
-<script>
- 
 }
 
 function carregar(){
