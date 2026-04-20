@@ -183,6 +183,38 @@ function abrirCamera(){
  );
 }
 
+<!-- SUBSTITUA SUA FUNÇÃO buscarProduto() POR ESTA -->
+
+<script>
+function buscarProduto(){
+
+ const codigo = document.getElementById("codigo").value.trim();
+
+ for(let p in estoque){
+
+   if(estoque[p].codigo == codigo){
+
+      /* PREENCHE AUTOMÁTICO */
+      document.getElementById("produto").value = p;
+      document.getElementById("descricao").value =
+      estoque[p].descricao;
+
+      /* SE ESTIVER EM SAÍDA, MOSTRA SALDO NO CAMPO QUANTIDADE */
+      if(document.getElementById("tipo").value === "Saída"){
+         document.getElementById("qtd").placeholder =
+         "Saldo atual: " + estoque[p].saldo;
+      }
+
+      return;
+   }
+ }
+
+ /* LIMPA SE NÃO ENCONTRAR */
+ document.getElementById("produto").value = "";
+ document.getElementById("descricao").value = "";
+}
+</script>
+ 
 function onScanSuccess(decodedText){
 
  document.getElementById("codigo").value = decodedText;
