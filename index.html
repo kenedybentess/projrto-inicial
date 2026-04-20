@@ -116,125 +116,13 @@ if(sessao !== "ok"){
 <div class="card"><small>Status</small><h2>Online</h2></div>
 </div>
 
-
-
-<!-- SUBSTITUA SUA ÁREA DE FORMULÁRIO POR ESTA -->
-
 <div class="card">
 <h3>Cadastro / Movimentação</h3>
 
 <div class="grid">
-
-<select id="tipo" onchange="trocarModo()">
-<option>Entrada</option>
-<option>Saída</option>
-</select>
-
-<input id="codigo" placeholder="Código do Produto" oninput="buscarProduto()">
-
 <input id="produto" placeholder="Produto">
-
 <input id="descricao" placeholder="Descrição do Produto">
-
-<input id="qtd" type="number" placeholder="Quantidade">
-
-<input id="minimo" type="number" placeholder="Estoque mínimo">
-
-</div>
-
-<br>
-<button onclick="salvar()">Salvar</button>
-</div>
-📷 Ler Código de Barras
-</button>
- <!-- MODAL DA CÂMERA -->
-
-
-<h3>Leitor de Código</h3>
-
-<div id="reader" style="width:100%;"></div>
-
-<br>
-<button onclick="fecharCamera()">Fechar</button>
-
-</div>
-</div>
-
-<!-- BIBLIOTECA -->
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<!-- SCRIPT -->
-<script>
-let scanner;
-
-function abrirCamera(){
-
- document.getElementById("cameraBox").style.display = "block";
-
- scanner = new Html5Qrcode("reader");
-
- scanner.start(
-   { facingMode: "environment" },
-   {
-     fps: 10,
-     qrbox: 250
-   },
-   onScanSuccess
- );
-}
-
-<!-- SUBSTITUA SUA FUNÇÃO buscarProduto() POR ESTA -->
-
-<script>
-function buscarProduto(){
-
- const codigo = document.getElementById("codigo").value.trim();
-
- for(let p in estoque){
-
-   if(estoque[p].codigo == codigo){
-
-      /* PREENCHE AUTOMÁTICO */
-      document.getElementById("produto").value = p;
-      document.getElementById("descricao").value =
-      estoque[p].descricao;
-
-      /* SE ESTIVER EM SAÍDA, MOSTRA SALDO NO CAMPO QUANTIDADE */
-      if(document.getElementById("tipo").value === "Saída"){
-         document.getElementById("qtd").placeholder =
-         "Saldo atual: " + estoque[p].saldo;
-      }
-
-      return;
-   }
- }
-
- /* LIMPA SE NÃO ENCONTRAR */
- document.getElementById("produto").value = "";
- document.getElementById("descricao").value = "";
-}
-</script>
- 
-function onScanSuccess(decodedText){
-
- document.getElementById("codigo").value = decodedText;
-
- buscarProduto(); // usa sua função atual
-
- fecharCamera();
-
-}
-
-function fecharCamera(){
-
- document.getElementById("cameraBox").style.display = "none";
-
- if(scanner){
-   scanner.stop().then(()=>{}).catch(()=>{});
- }
-
-}
-</script>
+<input id="codigo" placeholder="Código">
 <select id="tipo">
 <option>Entrada</option>
 <option>Saída</option>
