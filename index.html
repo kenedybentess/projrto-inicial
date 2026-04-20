@@ -123,6 +123,85 @@ if(sessao !== "ok"){
 <input id="produto" placeholder="Produto">
 <input id="descricao" placeholder="Descrição do Produto">
 <input id="codigo" placeholder="Código">
+ <button type="button" onclick="abrirCamera()">
+📷 Ler Código de Barras
+</button>
+ <!-- MODAL DA CÂMERA -->
+<div id="cameraBox" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.8);
+z-index:9999;
+padding:20px;
+box-sizing:border-box;
+">
+
+<div style="
+background:#fff;
+max-width:500px;
+margin:auto;
+padding:15px;
+border-radius:12px;
+text-align:center;
+">
+
+<h3>Leitor de Código</h3>
+
+<div id="reader" style="width:100%;"></div>
+
+<br>
+<button onclick="fecharCamera()">Fechar</button>
+
+</div>
+</div>
+
+<!-- BIBLIOTECA -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<!-- SCRIPT -->
+<script>
+let scanner;
+
+function abrirCamera(){
+
+ document.getElementById("cameraBox").style.display = "block";
+
+ scanner = new Html5Qrcode("reader");
+
+ scanner.start(
+   { facingMode: "environment" },
+   {
+     fps: 10,
+     qrbox: 250
+   },
+   onScanSuccess
+ );
+}
+
+function onScanSuccess(decodedText){
+
+ document.getElementById("codigo").value = decodedText;
+
+ buscarProduto(); // usa sua função atual
+
+ fecharCamera();
+
+}
+
+function fecharCamera(){
+
+ document.getElementById("cameraBox").style.display = "none";
+
+ if(scanner){
+   scanner.stop().then(()=>{}).catch(()=>{});
+ }
+
+}
+</script>
 <select id="tipo">
 <option>Entrada</option>
 <option>Saída</option>
