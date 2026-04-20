@@ -119,11 +119,33 @@ if(sessao !== "ok"){
 <div class="card">
 <h3>Cadastro / Movimentação</h3>
 
+<!-- SUBSTITUA SUA ÁREA DE FORMULÁRIO POR ESTA -->
+
+<div class="card">
+<h3>Cadastro / Movimentação</h3>
+
 <div class="grid">
+
+<select id="tipo" onchange="trocarModo()">
+<option>Entrada</option>
+<option>Saída</option>
+</select>
+
+<input id="codigo" placeholder="Código do Produto" oninput="buscarProduto()">
+
 <input id="produto" placeholder="Produto">
+
 <input id="descricao" placeholder="Descrição do Produto">
-<input id="codigo" placeholder="Código">
- <button type="button" onclick="abrirCamera()">
+
+<input id="qtd" type="number" placeholder="Quantidade">
+
+<input id="minimo" type="number" placeholder="Estoque mínimo">
+
+</div>
+
+<br>
+<button onclick="salvar()">Salvar</button>
+</div>
 📷 Ler Código de Barras
 </button>
  <!-- MODAL DA CÂMERA -->
