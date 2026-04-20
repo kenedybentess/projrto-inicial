@@ -1,117 +1,185 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Controle de Materiais Bentes</title>
+<title>Estoque Empresarial Bentes</title>
 <style>
 body{margin:0;font-family:Arial;background:#eef3f8}
 header{background:#0f3d91;color:#fff;padding:20px}
-.wrap{max-width:1100px;margin:auto;padding:20px}
+.wrap{max-width:1200px;margin:auto;padding:20px}
 .card{background:#fff;border-radius:14px;padding:18px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc;width:100%}
 button{background:#0f3d91;color:#fff;border:none;cursor:pointer}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-small{color:#666}
+.alerta{color:red;font-weight:bold}
+.ok{color:green;font-weight:bold}
 </style>
 </head>
 <body>
 
+<script>
+const usuario = prompt("Usuário:");
+const senha = prompt("Senha:");
+
+if(usuario !== "kenedy" || senha !== "220718"){
+  alert("Acesso negado");
+  location.reload();
+}
+</script>
+
 <header>
-<h1>Controle de Materiais Bentes</h1>
-<p>Login: kenedy</p>
+<h1>Controle de Estoque Empresarial Bentes</h1>
+<p>Usuário logado: kenedy</p>
 </header>
 
 <div class="wrap">
 
 <div class="grid">
-<div class="card"><small>Total Itens</small><h2 id="totalItens">0</h2></div>
-<div class="card"><small>Estoque Crítico</small><h2 id="criticos">0</h2></div>
-<div class="card"><small>Usuário</small><h2>kenedy</h2></div>
+<div class="card"><small>Total Produtos</small><h2 id="produtos">0</h2></div>
+<div class="card"><small>Itens Críticos</small><h2 id="criticos">0</h2></div>
+<div class="card"><small>Movimentações</small><h2 id="movs">0</h2></div>
+<div class="card"><small>Status</small><h2>Online</h2></div>
 </div>
 
 <div class="card">
-<h3>Nova Movimentação</h3>
+<h3>Cadastro / Movimentação</h3>
 <div class="grid">
-<input id="material" placeholder="Material">
+<input id="produto" placeholder="Produto">
+<input id="codigo" placeholder="Código Barras / SKU">
 <select id="tipo">
 <option>Entrada</option>
 <option>Saída</option>
 </select>
 <input id="qtd" type="number" placeholder="Quantidade">
+<input id="minimo" type="number" placeholder="Estoque mínimo">
 </div>
 <br>
 <button onclick="salvar()">Salvar</button>
 </div>
 
 <div class="card">
-<h3>Últimos Registros</h3>
+<h3>Estoque Atual</h3>
+<table>
+<thead>
+<tr>
+<th>Produto</th>
+<th>Código</th>
+<th>Saldo</th>
+<th>Mínimo</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="estoque"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>Histórico</h3>
 <table>
 <thead>
 <tr>
 <th>Data</th>
-<th>Material</th>
+<th>Produto</th>
 <th>Tipo</th>
 <th>Qtd</th>
 </tr>
 </thead>
-<tbody id="lista"></tbody>
+<tbody id="historico"></tbody>
 </table>
 </div>
 
 </div>
 
 <script>
-const senhaSistema = "220718";
-
-if(prompt("Digite a senha:") !== senhaSistema){
-  alert("Senha incorreta");
-  location.reload();
-}
-
-let dados = JSON.parse(localStorage.getItem("movs") || "[]");
-
-function atualizar(){
-  let html = "";
-  dados.reverse().forEach(r=>{
-    html += `<tr>
-      <td>${r.data}</td>
-      <td>${r.material}</td>
-      <td>${r.tipo}</td>
-      <td>${r.qtd}</td>
-    </tr>`;
-  });
-  document.getElementById("lista").innerHTML = html;
-
-  document.getElementById("totalItens").innerText = dados.length;
-  document.getElementById("criticos").innerText = "0";
-}
+let estoque = JSON.parse(localStorage.getItem("estoque_bentes") || "{}");
+let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
 
 function salvar(){
-  const material = document.getElementById("material").value;
-  const tipo = document.getElementById("tipo").value;
-  const qtd = document.getElementById("qtd").value;
+ let produto = document.getElementById("produto").value.trim();
+ let codigo = document.getElementById("codigo").value.trim();
+ let tipo = document.getElementById("tipo").value;
+ let qtd = parseInt(document.getElementById("qtd").value);
+ let minimo = parseInt(document.getElementById("minimo").value) || 0;
 
-  if(!material || !qtd){
-    alert("Preencha os campos");
-    return;
-  }
+ if(!produto || !codigo || !qtd){
+   alert("Preencha os campos");
+   return;
+ }
 
-  dados.push({
-    data:new Date().toLocaleDateString(),
-    material,
-    tipo,
-    qtd
-  });
+ if(!estoque[produto]){
+   estoque[produto] = {codigo:codigo,saldo:0,minimo:minimo};
+ }
 
-  localStorage.setItem("movs", JSON.stringify(dados));
-  location.reload();
+ estoque[produto].codigo = codigo;
+ estoque[produto].minimo = minimo;
+
+ if(tipo=="Entrada"){
+   estoque[produto].saldo += qtd;
+ }else{
+   estoque[produto].saldo -= qtd;
+   if(estoque[produto].saldo < 0){
+      estoque[produto].saldo = 0;
+   }
+ }
+
+ historico.push({
+   data:new Date().toLocaleString(),
+   produto,
+   tipo,
+   qtd
+ });
+
+ localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+ localStorage.setItem("historico_bentes", JSON.stringify(historico));
+
+ location.reload();
 }
 
-atualizar();
+function carregar(){
+ let html="";
+ let crit=0;
+ let total=0;
+
+ for(let p in estoque){
+   total++;
+   let item = estoque[p];
+   let status = item.saldo <= item.minimo 
+      ? "<span class='alerta'>REPOR</span>"
+      : "<span class='ok'>OK</span>";
+
+   if(item.saldo <= item.minimo) crit++;
+
+   html += `<tr>
+     <td>${p}</td>
+     <td>${item.codigo}</td>
+     <td>${item.saldo}</td>
+     <td>${item.minimo}</td>
+     <td>${status}</td>
+   </tr>`;
+ }
+
+ document.getElementById("estoque").innerHTML = html;
+ document.getElementById("produtos").innerText = total;
+ document.getElementById("criticos").innerText = crit;
+ document.getElementById("movs").innerText = historico.length;
+
+ let hist="";
+ historico.slice().reverse().forEach(h=>{
+   hist += `<tr>
+     <td>${h.data}</td>
+     <td>${h.produto}</td>
+     <td>${h.tipo}</td>
+     <td>${h.qtd}</td>
+   </tr>`;
+ });
+
+ document.getElementById("historico").innerHTML = hist;
+}
+
+carregar();
 </script>
 
 </body>
