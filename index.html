@@ -20,13 +20,21 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
 </head>
 <body>
 
-<script>
-const usuario = prompt("Usuário:");
-const senha = prompt("Senha:");
+<!-- SUBSTITUA APENAS A PARTE DO LOGIN NO SEU CÓDIGO -->
 
-if(usuario !== "kenedy" || senha !== "220718"){
-  alert("Acesso negado");
-  location.reload();
+<script>
+const sessao = localStorage.getItem("login_bentes");
+
+if(sessao !== "ok"){
+    const usuario = prompt("Usuário:");
+    const senha = prompt("Senha:");
+
+    if(usuario === "kenedy" && senha === "220718"){
+        localStorage.setItem("login_bentes","ok");
+    }else{
+        alert("Acesso negado");
+        location.reload();
+    }
 }
 </script>
 
