@@ -1,74 +1,184 @@
-<!-- SUBSTITUA TODO O BLOCO <script> PRINCIPAL PELO CÓDIGO ABAIXO -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle de Estoque Empresarial Bentes</title>
+
+ <!-- IMPORTAÇÃO EXCEL FORMATO SAP -->
+<hr>
+<h3>Importar Lista SAP / Excel</h3>
+
+<input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv">
+<br><br>
+<button onclick="importarExcelSAP()">Importar Arquivo</button>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script>
+function importarExcelSAP(){
+
+ const arquivo = document.getElementById("arquivoExcel").files[0];
+
+ if(!arquivo){
+   alert("Selecione o arquivo.");
+   return;
+ }
+
+ const reader = new FileReader();
+
+ reader.onload = function(e){
+
+   const data = new Uint8Array(e.target.result);
+   const workbook = XLSX.read(data,{type:'array'});
+   const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+   const linhas = XLSX.utils.sheet_to_json(sheet);
+
+   let total = 0;
+
+   linhas.forEach(item=>{
+
+      const codigo = item["Nº componente"] || "";
+      const descricao = item["Texto breve objeto"] || "";
+      const saldo = parseInt(item["Qtd.componente (UMC)"] || 0);
+
+      if(codigo && descricao){
+
+         estoque[codigo] = {
+            descricao: descricao,
+            codigo: codigo,
+            saldo: saldo,
+            minimo: 1
+         };
+
+         total++;
+      }
+
+   });
+
+   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+
+   alert(total + " produtos importados com sucesso!");
+
+   location.reload();
+
+ };
+
+ reader.readAsArrayBuffer(arquivo);
+}
+</script>
+
+<style>
+body{margin:0;font-family:Arial;background:#eef3f8}
+header{background:#0f3d91;color:#fff;padding:20px}
+.wrap{max-width:1200px;margin:auto;padding:20px}
+.card{background:#fff;border-radius:14px;padding:18px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc;width:100%;box-sizing:border-box}
+button{background:#0f3d91;color:#fff;border:none;cursor:pointer}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+.alerta{color:red;font-weight:bold}
+.ok{color:green;font-weight:bold}
+.acoes{display:flex;gap:5px}
+</style>
+</head>
+<body>
+
+<script>
+const sessao = localStorage.getItem("login_bentes");
+
+if(sessao !== "ok"){
+ const usuario = prompt("Usuário:");
+ const senha = prompt("Senha:");
+
+ if(usuario === "kenedy" && senha === "220718"){
+   localStorage.setItem("login_bentes","ok");
+ }else{
+   alert("Acesso negado");
+   location.reload();
+ }
+}
+</script>
+
+<header>
+<h1>Controle de Estoque Empresarial Bentes</h1>
+<p>Usuário logado: kenedy</p>
+</header>
+
+<div class="wrap">
+
+<div class="grid">
+<div class="card"><small>Total Produtos</small><h2 id="produtos">0</h2></div>
+<div class="card"><small>Itens Críticos</small><h2 id="criticos">0</h2></div>
+<div class="card"><small>Movimentações</small><h2 id="movs">0</h2></div>
+<div class="card"><small>Status</small><h2>Online</h2></div>
+</div>
+
+<div class="card">
+<h3>Cadastro / Movimentação</h3>
+
+<div class="grid">
+<input id="produto" placeholder="Produto">
+<input id="descricao" placeholder="Descrição do Produto">
+<input id="codigo" placeholder="Código">
+<select id="tipo">
+<option>Entrada</option>
+<option>Saída</option>
+</select>
+<input id="qtd" type="number" placeholder="Quantidade">
+<input id="minimo" type="number" placeholder="Estoque mínimo">
+</div>
+
+<br>
+<button onclick="salvar()">Salvar</button>
+ <button onclick="excluirTudo()" style="background:red;">
+ Excluir Todos
+</button>
+</div>
+
+<div class="card">
+<h3>Estoque Atual</h3>
+
+<table>
+<thead>
+<tr>
+<th>Produto</th>
+<th>Descrição</th>
+<th>Código</th>
+<th>Saldo</th>
+<th>Mínimo</th>
+<th>Status</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="estoque"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>Histórico</h3>
+
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Produto</th>
+<th>Tipo</th>
+<th>Qtd</th>
+</tr>
+</thead>
+<tbody id="historico"></tbody>
+</table>
+</div>
+
+</div>
 
 <script>
 let estoque = JSON.parse(localStorage.getItem("estoque_bentes") || "{}");
 let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
 
-/* =========================
-   AUTO PREENCHER PELO CÓDIGO
-========================= */
-function buscarProduto(){
-
- let codigo = document.getElementById("codigo").value.trim();
- let tipo = document.getElementById("tipo").value;
-
- for(let p in estoque){
-
-   if(estoque[p].codigo == codigo){
-
-      document.getElementById("produto").value = p;
-      document.getElementById("descricao").value =
-      estoque[p].descricao;
-
-      /* QUANDO FOR SAÍDA */
-      if(tipo == "Saída"){
-         document.getElementById("qtd").value = "";
-         document.getElementById("qtd").placeholder =
-         "Saldo atual: " + estoque[p].saldo;
-      }
-
-      return;
-   }
- }
-
- document.getElementById("produto").value = "";
- document.getElementById("descricao").value = "";
-}
-
-/* =========================
-   TROCAR ENTRADA / SAÍDA
-========================= */
-function trocarModo(){
-
- let tipo = document.getElementById("tipo").value;
-
- if(tipo == "Saída"){
-
-   document.getElementById("produto").readOnly = true;
-   document.getElementById("descricao").readOnly = true;
-
-   document.getElementById("produto").placeholder =
-   "Automático";
-
-   document.getElementById("descricao").placeholder =
-   "Automático";
-
- }else{
-
-   document.getElementById("produto").readOnly = false;
-   document.getElementById("descricao").readOnly = false;
-
-   document.getElementById("produto").placeholder =
-   "Produto";
-
-   document.getElementById("descricao").placeholder =
-   "Descrição do Produto";
- }
-}
-
-/* =========================
-   SALVAR
-========================= */
 function salvar(){
 
  let produto = document.getElementById("produto").value.trim();
@@ -78,60 +188,31 @@ function salvar(){
  let qtd = parseInt(document.getElementById("qtd").value);
  let minimo = parseInt(document.getElementById("minimo").value) || 0;
 
- if(!codigo || !qtd){
-   alert("Preencha código e quantidade.");
+ if(!produto || !codigo || !qtd){
+   alert("Preencha todos os campos");
    return;
  }
 
- /* ENTRADA */
- if(tipo == "Entrada"){
-
-   if(!produto || !descricao){
-      alert("Preencha produto e descrição.");
-      return;
-   }
-
-   if(!estoque[produto]){
-      estoque[produto] = {
-        descricao:descricao,
-        codigo:codigo,
-        saldo:0,
-        minimo:minimo
-      };
-   }
-
-   estoque[produto].descricao = descricao;
-   estoque[produto].codigo = codigo;
-   estoque[produto].minimo = minimo;
-   estoque[produto].saldo += qtd;
+ if(!estoque[produto]){
+   estoque[produto] = {
+     descricao:descricao,
+     codigo:codigo,
+     saldo:0,
+     minimo:minimo
+   };
  }
 
- /* SAÍDA */
- else{
+ estoque[produto].descricao = descricao;
+ estoque[produto].codigo = codigo;
+ estoque[produto].minimo = minimo;
 
-   let achou = false;
+ if(tipo === "Entrada"){
+   estoque[produto].saldo += qtd;
+ }else{
+   estoque[produto].saldo -= qtd;
 
-   for(let p in estoque){
-
-      if(estoque[p].codigo == codigo){
-
-         estoque[p].saldo -= qtd;
-
-         if(estoque[p].saldo < 0){
-            estoque[p].saldo = 0;
-         }
-
-         produto = p;
-         descricao = estoque[p].descricao;
-
-         achou = true;
-         break;
-      }
-   }
-
-   if(!achou){
-      alert("Código não encontrado.");
-      return;
+   if(estoque[produto].saldo < 0){
+      estoque[produto].saldo = 0;
    }
  }
 
@@ -148,9 +229,6 @@ function salvar(){
  location.reload();
 }
 
-/* =========================
-   RESTANTE DO SISTEMA
-========================= */
 function excluirProduto(produto){
 
  if(confirm("Deseja excluir " + produto + "?")){
@@ -198,10 +276,12 @@ function carregar(){
    let item = estoque[p];
 
    let status = item.saldo <= item.minimo
-   ? "<span class='alerta'>REPOR</span>"
-   : "<span class='ok'>OK</span>";
+      ? "<span class='alerta'>REPOR</span>"
+      : "<span class='ok'>OK</span>";
 
-   if(item.saldo <= item.minimo) crit++;
+   if(item.saldo <= item.minimo){
+      crit++;
+   }
 
    html += `
    <tr>
@@ -242,9 +322,21 @@ function carregar(){
 }
 
 carregar();
-trocarModo();
-
-/* EVENTOS */
-document.getElementById("codigo").addEventListener("input",buscarProduto);
-document.getElementById("tipo").addEventListener("change",trocarModo);
 </script>
+<script>
+function excluirTudo(){
+
+ if(confirm("Deseja apagar TODO o estoque e histórico?")){
+
+   localStorage.removeItem("estoque_bentes");
+   localStorage.removeItem("historico_bentes");
+
+   alert("Todos os dados foram apagados!");
+
+   location.reload();
+ }
+
+}
+</script>
+</body>
+</html>
