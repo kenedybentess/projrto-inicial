@@ -3,107 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Controle de Estoque Empresarial Bentes</title>
-
- <!-- IMPORTAÇÃO EXCEL FORMATO SAP -->
-<hr>
-<h3>Importar Lista SAP / Excel</h3>
-
-<input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv">
-<br><br>
-<button onclick="importarExcelSAP()">Importar Arquivo</button>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<script>
-function importarExcelSAP(){
-
- const arquivo = document.getElementById("arquivoExcel").files[0];
-
- if(!arquivo){
-   alert("Selecione o arquivo.");
-   return;
- }
-
- const reader = new FileReader();
-
- reader.onload = function(e){
-
-   const data = new Uint8Array(e.target.result);
-   const workbook = XLSX.read(data,{type:'array'});
-   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-   const linhas = XLSX.utils.sheet_to_json(sheet);
-
-   let total = 0;
-
-   linhas.forEach(item=>{
-
-      const codigo = item["Nº componente"] || "";
-      const descricao = item["Texto breve objeto"] || "";
-      const saldo = parseInt(item["Qtd.componente (UMC)"] || 0);
-
-      if(codigo && descricao){
-
-         estoque[codigo] = {
-            descricao: descricao,
-            codigo: codigo,
-            saldo: saldo,
-            minimo: 1
-         };
-
-         total++;
-      }
-
-   });
-
-   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
-
-   alert(total + " produtos importados com sucesso!");
-
-   location.reload();
-
- };
-
- reader.readAsArrayBuffer(arquivo);
-}
-</script>
+<title>EMPRESARIAL BENTES STOCK PRO</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#eef3f8}
-header{background:#0f3d91;color:#fff;padding:20px}
-.wrap{max-width:1200px;margin:auto;padding:20px}
-.card{background:#fff;border-radius:14px;padding:18px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc;width:100%;box-sizing:border-box}
-button{background:#0f3d91;color:#fff;border:none;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-.alerta{color:red;font-weight:bold}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#eef3f8}
+header{
+background:linear-gradient(90deg,#0f3d91,#1d5ed8);
+color:#fff;
+padding:20px;
+box-shadow:0 3px 10px rgba(0,0,0,.15);
+}
+header h1{font-size:28px}
+.wrap{max-width:1300px;margin:auto;padding:20px}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:15px;
+margin-bottom:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:14px;
+box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+.card h2{margin-top:10px;color:#0f3d91}
+
+input,select,button{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+background:#0f3d91;
+color:#fff;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{background:#082c6e}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:#fff;
+border-radius:12px;
+overflow:hidden;
+}
+
+th{
+background:#0f3d91;
+color:#fff;
+padding:12px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
 .ok{color:green;font-weight:bold}
-.acoes{display:flex;gap:5px}
+.alerta{color:red;font-weight:bold}
+
+.acoes{
+display:flex;
+gap:5px;
+}
+
+.busca{
+margin-bottom:15px;
+}
+
+small{color:#777}
 </style>
 </head>
 <body>
 
 <script>
-const sessao = localStorage.getItem("login_bentes");
+const login = localStorage.getItem("login_bentes");
 
-if(sessao !== "ok"){
- const usuario = prompt("Usuário:");
- const senha = prompt("Senha:");
+if(login !== "ok"){
+let u = prompt("Usuário:");
+let s = prompt("Senha:");
 
- if(usuario === "kenedy" && senha === "220718"){
-   localStorage.setItem("login_bentes","ok");
- }else{
-   alert("Acesso negado");
-   location.reload();
- }
+if(u=="kenedy" && s=="220718"){
+localStorage.setItem("login_bentes","ok");
+}else{
+alert("Acesso negado");
+location.reload();
+}
 }
 </script>
 
 <header>
-<h1>Controle de Estoque Empresarial Bentes</h1>
+<h1>EMPRESARIAL BENTES STOCK PRO</h1>
 <p>Usuário logado: kenedy</p>
 </header>
 
@@ -113,15 +114,14 @@ if(sessao !== "ok"){
 <div class="card"><small>Total Produtos</small><h2 id="produtos">0</h2></div>
 <div class="card"><small>Itens Críticos</small><h2 id="criticos">0</h2></div>
 <div class="card"><small>Movimentações</small><h2 id="movs">0</h2></div>
-<div class="card"><small>Status</small><h2>Online</h2></div>
+<div class="card"><small>Status</small><h2>ONLINE</h2></div>
 </div>
 
 <div class="card">
 <h3>Cadastro / Movimentação</h3>
 
-<div class="grid">
 <input id="produto" placeholder="Produto">
-<input id="descricao" placeholder="Descrição do Produto">
+<input id="descricao" placeholder="Descrição">
 <input id="codigo" placeholder="Código">
 <select id="tipo">
 <option>Entrada</option>
@@ -129,18 +129,16 @@ if(sessao !== "ok"){
 </select>
 <input id="qtd" type="number" placeholder="Quantidade">
 <input id="minimo" type="number" placeholder="Estoque mínimo">
+<button onclick="salvar()">Salvar</button>
 </div>
 
-<br>
-<button onclick="salvar()">Salvar</button>
- <button onclick="excluirTudo()" style="background:red;">
- Excluir Todos
-</button>
+<div class="card">
+<h3>Busca</h3>
+<input class="busca" id="busca" placeholder="Buscar produto..." onkeyup="carregar()">
 </div>
 
 <div class="card">
 <h3>Estoque Atual</h3>
-
 <table>
 <thead>
 <tr>
@@ -148,7 +146,6 @@ if(sessao !== "ok"){
 <th>Descrição</th>
 <th>Código</th>
 <th>Saldo</th>
-<th>Mínimo</th>
 <th>Status</th>
 <th>Ações</th>
 </tr>
@@ -159,7 +156,6 @@ if(sessao !== "ok"){
 
 <div class="card">
 <h3>Histórico</h3>
-
 <table>
 <thead>
 <tr>
@@ -181,162 +177,124 @@ let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
 
 function salvar(){
 
- let produto = document.getElementById("produto").value.trim();
- let descricao = document.getElementById("descricao").value.trim();
- let codigo = document.getElementById("codigo").value.trim();
- let tipo = document.getElementById("tipo").value;
- let qtd = parseInt(document.getElementById("qtd").value);
- let minimo = parseInt(document.getElementById("minimo").value) || 0;
+let produto = produtoInput("produto");
+let descricao = produtoInput("descricao");
+let codigo = produtoInput("codigo");
+let tipo = produtoInput("tipo");
+let qtd = parseInt(produtoInput("qtd"));
+let minimo = parseInt(produtoInput("minimo")) || 0;
 
- if(!produto || !codigo || !qtd){
-   alert("Preencha todos os campos");
-   return;
- }
-
- if(!estoque[produto]){
-   estoque[produto] = {
-     descricao:descricao,
-     codigo:codigo,
-     saldo:0,
-     minimo:minimo
-   };
- }
-
- estoque[produto].descricao = descricao;
- estoque[produto].codigo = codigo;
- estoque[produto].minimo = minimo;
-
- if(tipo === "Entrada"){
-   estoque[produto].saldo += qtd;
- }else{
-   estoque[produto].saldo -= qtd;
-
-   if(estoque[produto].saldo < 0){
-      estoque[produto].saldo = 0;
-   }
- }
-
- historico.push({
-   data:new Date().toLocaleString(),
-   produto,
-   tipo,
-   qtd
- });
-
- localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
- localStorage.setItem("historico_bentes", JSON.stringify(historico));
-
- location.reload();
+if(!produto || !codigo || !qtd){
+alert("Preencha os campos");
+return;
 }
 
-function excluirProduto(produto){
-
- if(confirm("Deseja excluir " + produto + "?")){
-   delete estoque[produto];
-   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
-   location.reload();
- }
+if(!estoque[produto]){
+estoque[produto]={
+descricao:descricao,
+codigo:codigo,
+saldo:0,
+minimo:minimo
+};
 }
 
-function editarProduto(produto){
+estoque[produto].descricao=descricao;
+estoque[produto].codigo=codigo;
+estoque[produto].minimo=minimo;
 
- let novoNome = prompt("Novo nome:", produto);
- if(!novoNome) return;
+if(tipo=="Entrada"){
+estoque[produto].saldo += qtd;
+}else{
+estoque[produto].saldo -= qtd;
+if(estoque[produto].saldo<0) estoque[produto].saldo=0;
+}
 
- let novaDescricao = prompt("Descrição:", estoque[produto].descricao);
- let novoCodigo = prompt("Novo código:", estoque[produto].codigo);
- let novoMinimo = prompt("Novo mínimo:", estoque[produto].minimo);
+historico.push({
+data:new Date().toLocaleString(),
+produto,
+tipo,
+qtd
+});
 
- estoque[novoNome] = {
-   descricao:novaDescricao,
-   codigo:novoCodigo,
-   saldo:estoque[produto].saldo,
-   minimo:parseInt(novoMinimo)
- };
+salvarLocal();
+location.reload();
+}
 
- if(novoNome !== produto){
-   delete estoque[produto];
- }
+function produtoInput(id){
+return document.getElementById(id).value.trim();
+}
 
- localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+function salvarLocal(){
+localStorage.setItem("estoque_bentes",JSON.stringify(estoque));
+localStorage.setItem("historico_bentes",JSON.stringify(historico));
+}
 
- location.reload();
+function excluir(prod){
+if(confirm("Excluir produto?")){
+delete estoque[prod];
+salvarLocal();
+location.reload();
+}
 }
 
 function carregar(){
 
- let html = "";
- let crit = 0;
- let total = 0;
+let busca = document.getElementById("busca").value.toLowerCase();
 
- for(let p in estoque){
+let html="";
+let total=0;
+let crit=0;
 
-   total++;
+for(let p in estoque){
 
-   let item = estoque[p];
+if(!p.toLowerCase().includes(busca)) continue;
 
-   let status = item.saldo <= item.minimo
-      ? "<span class='alerta'>REPOR</span>"
-      : "<span class='ok'>OK</span>";
+let item = estoque[p];
+total++;
 
-   if(item.saldo <= item.minimo){
-      crit++;
-   }
+let status = item.saldo <= item.minimo ?
+"<span class='alerta'>REPOR</span>" :
+"<span class='ok'>OK</span>";
 
-   html += `
-   <tr>
-     <td>${p}</td>
-     <td>${item.descricao}</td>
-     <td>${item.codigo}</td>
-     <td>${item.saldo}</td>
-     <td>${item.minimo}</td>
-     <td>${status}</td>
-     <td class="acoes">
-       <button onclick="editarProduto('${p}')">Editar</button>
-       <button onclick="excluirProduto('${p}')">Excluir</button>
-     </td>
-   </tr>
-   `;
- }
+if(item.saldo <= item.minimo) crit++;
 
- document.getElementById("estoque").innerHTML = html;
- document.getElementById("produtos").innerText = total;
- document.getElementById("criticos").innerText = crit;
- document.getElementById("movs").innerText = historico.length;
+html += `
+<tr>
+<td>${p}</td>
+<td>${item.descricao}</td>
+<td>${item.codigo}</td>
+<td>${item.saldo}</td>
+<td>${status}</td>
+<td class="acoes">
+<button onclick="excluir('${p}')">Excluir</button>
+</td>
+</tr>
+`;
+}
 
- let hist = "";
+document.getElementById("estoque").innerHTML = html;
+document.getElementById("produtos").innerText = total;
+document.getElementById("criticos").innerText = crit;
+document.getElementById("movs").innerText = historico.length;
 
- historico.slice().reverse().forEach(h=>{
+let hist="";
 
-   hist += `
-   <tr>
-     <td>${h.data}</td>
-     <td>${h.produto}</td>
-     <td>${h.tipo}</td>
-     <td>${h.qtd}</td>
-   </tr>
-   `;
- });
+historico.slice().reverse().forEach(h=>{
+hist += `
+<tr>
+<td>${h.data}</td>
+<td>${h.produto}</td>
+<td>${h.tipo}</td>
+<td>${h.qtd}</td>
+</tr>
+`;
+});
 
- document.getElementById("historico").innerHTML = hist;
+document.getElementById("historico").innerHTML = hist;
 }
 
 carregar();
 </script>
-<script>
-function excluirTudo(){
 
- if(confirm("Deseja apagar TODO o estoque e histórico?")){
-
-   localStorage.removeItem("estoque_bentes");
-   localStorage.removeItem("historico_bentes");
-
-   alert("Todos os dados foram apagados!");
-
-   location.reload();
- }
-
-}
-</script>
 </body>
 </html>
