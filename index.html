@@ -1,122 +1,250 @@
-<!-- MELHORIAS PREMIUM - COLE NO SEU SISTEMA -->
-
-<!-- =====================================
-1) CAMPO PESQUISA (coloque acima da tabela estoque)
-===================================== -->
-
-<div class="card">
-<h3>Pesquisar Produto</h3>
-<input id="pesquisa" placeholder="Digite nome, código ou descrição">
-</div>
-
-<!-- =====================================
-2) BOTÃO EXPORTAR
-===================================== -->
-
-<button onclick="exportarCSV()">Exportar Excel</button>
-
-<!-- =====================================
-3) ESTILO PREMIUM
-===================================== -->
-
-<style>
-body{
- background:linear-gradient(135deg,#eef3f8,#dfe9f7);
-}
-
-.card{
- border-left:5px solid #0f3d91;
- transition:.2s;
-}
-
-.card:hover{
- transform:translateY(-3px);
- box-shadow:0 6px 14px rgba(0,0,0,.12);
-}
-
-.alerta{
- color:#fff;
- background:red;
- padding:4px 8px;
- border-radius:8px;
- animation:pulse 1s infinite;
-}
-
-@keyframes pulse{
- 0%{opacity:1}
- 50%{opacity:.5}
- 100%{opacity:1}
-}
-</style>
-
-<!-- =====================================
-4) SCRIPT PREMIUM
-===================================== -->
+<!-- SUBSTITUA TODO O BLOCO <script> PRINCIPAL PELO CÓDIGO ABAIXO -->
 
 <script>
+let estoque = JSON.parse(localStorage.getItem("estoque_bentes") || "{}");
+let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
 
-/* PESQUISA AUTOMÁTICA */
-document.getElementById("pesquisa").addEventListener("keyup",function(){
+/* =========================
+   AUTO PREENCHER PELO CÓDIGO
+========================= */
+function buscarProduto(){
 
- let termo = this.value.toLowerCase();
- let linhas = document.querySelectorAll("#estoque tr");
-
- linhas.forEach(linha=>{
-
-   let texto = linha.innerText.toLowerCase();
-
-   linha.style.display =
-   texto.includes(termo) ? "" : "none";
-
- });
-
-});
-
-/* EXPORTAR CSV */
-function exportarCSV(){
-
- let csv = "Produto,Descricao,Codigo,Saldo,Minimo\n";
+ let codigo = document.getElementById("codigo").value.trim();
+ let tipo = document.getElementById("tipo").value;
 
  for(let p in estoque){
 
-   let i = estoque[p];
+   if(estoque[p].codigo == codigo){
 
-   csv += `${p},${i.descricao},${i.codigo},${i.saldo},${i.minimo}\n`;
+      document.getElementById("produto").value = p;
+      document.getElementById("descricao").value =
+      estoque[p].descricao;
+
+      /* QUANDO FOR SAÍDA */
+      if(tipo == "Saída"){
+         document.getElementById("qtd").value = "";
+         document.getElementById("qtd").placeholder =
+         "Saldo atual: " + estoque[p].saldo;
+      }
+
+      return;
+   }
  }
 
- let blob = new Blob([csv], {type:"text/csv"});
- let a = document.createElement("a");
-
- a.href = URL.createObjectURL(blob);
- a.download = "estoque_bentes.csv";
- a.click();
+ document.getElementById("produto").value = "";
+ document.getElementById("descricao").value = "";
 }
 
-/* ENTER SALVA NA SAÍDA */
-document.getElementById("qtd").addEventListener("keypress",function(e){
+/* =========================
+   TROCAR ENTRADA / SAÍDA
+========================= */
+function trocarModo(){
 
- if(e.key === "Enter"){
+ let tipo = document.getElementById("tipo").value;
 
-   if(document.getElementById("tipo").value=="Saída"){
-      salvar();
+ if(tipo == "Saída"){
+
+   document.getElementById("produto").readOnly = true;
+   document.getElementById("descricao").readOnly = true;
+
+   document.getElementById("produto").placeholder =
+   "Automático";
+
+   document.getElementById("descricao").placeholder =
+   "Automático";
+
+ }else{
+
+   document.getElementById("produto").readOnly = false;
+   document.getElementById("descricao").readOnly = false;
+
+   document.getElementById("produto").placeholder =
+   "Produto";
+
+   document.getElementById("descricao").placeholder =
+   "Descrição do Produto";
+ }
+}
+
+/* =========================
+   SALVAR
+========================= */
+function salvar(){
+
+ let produto = document.getElementById("produto").value.trim();
+ let descricao = document.getElementById("descricao").value.trim();
+ let codigo = document.getElementById("codigo").value.trim();
+ let tipo = document.getElementById("tipo").value;
+ let qtd = parseInt(document.getElementById("qtd").value);
+ let minimo = parseInt(document.getElementById("minimo").value) || 0;
+
+ if(!codigo || !qtd){
+   alert("Preencha código e quantidade.");
+   return;
+ }
+
+ /* ENTRADA */
+ if(tipo == "Entrada"){
+
+   if(!produto || !descricao){
+      alert("Preencha produto e descrição.");
+      return;
    }
 
+   if(!estoque[produto]){
+      estoque[produto] = {
+        descricao:descricao,
+        codigo:codigo,
+        saldo:0,
+        minimo:minimo
+      };
+   }
+
+   estoque[produto].descricao = descricao;
+   estoque[produto].codigo = codigo;
+   estoque[produto].minimo = minimo;
+   estoque[produto].saldo += qtd;
  }
 
-});
+ /* SAÍDA */
+ else{
 
-/* SOM SONORO */
-function beep(){
- let audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
- audio.play();
+   let achou = false;
+
+   for(let p in estoque){
+
+      if(estoque[p].codigo == codigo){
+
+         estoque[p].saldo -= qtd;
+
+         if(estoque[p].saldo < 0){
+            estoque[p].saldo = 0;
+         }
+
+         produto = p;
+         descricao = estoque[p].descricao;
+
+         achou = true;
+         break;
+      }
+   }
+
+   if(!achou){
+      alert("Código não encontrado.");
+      return;
+   }
+ }
+
+ historico.push({
+   data:new Date().toLocaleString(),
+   produto,
+   tipo,
+   qtd
+ });
+
+ localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+ localStorage.setItem("historico_bentes", JSON.stringify(historico));
+
+ location.reload();
 }
 
-/* AUTO SOM AO SALVAR */
-const salvarOriginal = salvar;
+/* =========================
+   RESTANTE DO SISTEMA
+========================= */
+function excluirProduto(produto){
 
-salvar = function(){
- salvarOriginal();
- beep();
+ if(confirm("Deseja excluir " + produto + "?")){
+   delete estoque[produto];
+   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+   location.reload();
+ }
 }
 
+function editarProduto(produto){
+
+ let novoNome = prompt("Novo nome:", produto);
+ if(!novoNome) return;
+
+ let novaDescricao = prompt("Descrição:", estoque[produto].descricao);
+ let novoCodigo = prompt("Novo código:", estoque[produto].codigo);
+ let novoMinimo = prompt("Novo mínimo:", estoque[produto].minimo);
+
+ estoque[novoNome] = {
+   descricao:novaDescricao,
+   codigo:novoCodigo,
+   saldo:estoque[produto].saldo,
+   minimo:parseInt(novoMinimo)
+ };
+
+ if(novoNome !== produto){
+   delete estoque[produto];
+ }
+
+ localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
+
+ location.reload();
+}
+
+function carregar(){
+
+ let html = "";
+ let crit = 0;
+ let total = 0;
+
+ for(let p in estoque){
+
+   total++;
+
+   let item = estoque[p];
+
+   let status = item.saldo <= item.minimo
+   ? "<span class='alerta'>REPOR</span>"
+   : "<span class='ok'>OK</span>";
+
+   if(item.saldo <= item.minimo) crit++;
+
+   html += `
+   <tr>
+     <td>${p}</td>
+     <td>${item.descricao}</td>
+     <td>${item.codigo}</td>
+     <td>${item.saldo}</td>
+     <td>${item.minimo}</td>
+     <td>${status}</td>
+     <td class="acoes">
+       <button onclick="editarProduto('${p}')">Editar</button>
+       <button onclick="excluirProduto('${p}')">Excluir</button>
+     </td>
+   </tr>
+   `;
+ }
+
+ document.getElementById("estoque").innerHTML = html;
+ document.getElementById("produtos").innerText = total;
+ document.getElementById("criticos").innerText = crit;
+ document.getElementById("movs").innerText = historico.length;
+
+ let hist = "";
+
+ historico.slice().reverse().forEach(h=>{
+
+   hist += `
+   <tr>
+     <td>${h.data}</td>
+     <td>${h.produto}</td>
+     <td>${h.tipo}</td>
+     <td>${h.qtd}</td>
+   </tr>
+   `;
+ });
+
+ document.getElementById("historico").innerHTML = hist;
+}
+
+carregar();
+trocarModo();
+
+/* EVENTOS */
+document.getElementById("codigo").addEventListener("input",buscarProduto);
+document.getElementById("tipo").addEventListener("change",trocarModo);
 </script>
