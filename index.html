@@ -3,340 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Controle de Estoque Empresarial Bentes</title>
-
- <!-- IMPORTAÇÃO EXCEL FORMATO SAP -->
-<hr>
-<h3>Importar Lista SAP / Excel</h3>
-
-<input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv">
-<br><br>
-<button onclick="importarExcelSAP()">Importar Arquivo</button>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<script>
-function importarExcelSAP(){
-
- const arquivo = document.getElementById("arquivoExcel").files[0];
-
- if(!arquivo){
-   alert("Selecione o arquivo.");
-   return;
- }
-
- const reader = new FileReader();
-
- reader.onload = function(e){
-
-   const data = new Uint8Array(e.target.result);
-   const workbook = XLSX.read(data,{type:'array'});
-   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-   const linhas = XLSX.utils.sheet_to_json(sheet);
-
-   let total = 0;
-
-   linhas.forEach(item=>{
-
-      const codigo = item["Nº componente"] || "";
-      const descricao = item["Texto breve objeto"] || "";
-      const saldo = parseInt(item["Qtd.componente (UMC)"] || 0);
-
-      if(codigo && descricao){
-
-         estoque[codigo] = {
-            descricao: descricao,
-            codigo: codigo,
-            saldo: saldo,
-            minimo: 1
-         };
-
-         total++;
-      }
-
-   });
-
-   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
-
-   alert(total + " produtos importados com sucesso!");
-
-   location.reload();
-
- };
-
- reader.readAsArrayBuffer(arquivo);
-}
-</script>
-
+<title>Bentes Stock PRO v3.0</title>
 <style>
-body{margin:0;font-family:Arial;background:#eef3f8}
-header{background:#0f3d91;color:#fff;padding:20px}
-.wrap{max-width:1200px;margin:auto;padding:20px}
-.card{background:#fff;border-radius:14px;padding:18px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc;width:100%;box-sizing:border-box}
-button{background:#0f3d91;color:#fff;border:none;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-.alerta{color:red;font-weight:bold}
-.ok{color:green;font-weight:bold}
-.acoes{display:flex;gap:5px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#eef3f8;color:#222}
+header{background:linear-gradient(90deg,#0f3d91,#1d5ed8);color:#fff;padding:20px;box-shadow:0 3px 10px rgba(0,0,0,.15)}
+.wrap{max-width:1280px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:#fff;padding:18px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}input,select,button{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin:6px 0}button{background:#0f3d91;color:#fff;border:none;cursor:pointer}button.danger{background:#c62828}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}th{background:#0f3d91;color:#fff}.ok{color:green;font-weight:bold}.alerta{color:#c62828;font-weight:bold}#alertaCritico{display:none;background:#ffebee;color:#b71c1c;padding:14px;border-left:6px solid #c62828;border-radius:10px;margin:14px 0}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-
-<script>
-const sessao = localStorage.getItem("login_bentes");
-
-if(sessao !== "ok"){
- const usuario = prompt("Usuário:");
- const senha = prompt("Senha:");
-
- if(usuario === "kenedy" && senha === "220718"){
-   localStorage.setItem("login_bentes","ok");
- }else{
-   alert("Acesso negado");
-   location.reload();
- }
-}
-</script>
-
-<header>
-<h1>Controle de Estoque Empresarial Bentes</h1>
-<p>Usuário logado: kenedy</p>
-</header>
-
+<header><h1>Controle de Estoque Empresarial Bentes</h1><p>Usuário logado: kenedy</p></header>
 <div class="wrap">
-
+<div id="alertaCritico">⚠ Atenção! Existem itens críticos no estoque.</div>
 <div class="grid">
 <div class="card"><small>Total Produtos</small><h2 id="produtos">0</h2></div>
 <div class="card"><small>Itens Críticos</small><h2 id="criticos">0</h2></div>
 <div class="card"><small>Movimentações</small><h2 id="movs">0</h2></div>
 <div class="card"><small>Status</small><h2>Online</h2></div>
 </div>
-
-<div class="card">
-<h3>Cadastro / Movimentação</h3>
-
-<div class="grid">
-<input id="produto" placeholder="Produto">
-<input id="descricao" placeholder="Descrição do Produto">
-<input id="codigo" placeholder="Código">
-<select id="tipo">
-<option>Entrada</option>
-<option>Saída</option>
-</select>
-<input id="qtd" type="number" placeholder="Quantidade">
-<input id="minimo" type="number" placeholder="Estoque mínimo">
+<div class="card"><h3>Importar Lista SAP / Excel</h3><input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv"><button onclick="importarExcelSAP()">Importar Arquivo</button></div>
+<div class="card"><h3>Cadastro / Movimentação</h3><div class="grid"><input id="produto" placeholder="Produto"><input id="descricao" placeholder="Descrição"><input id="codigo" placeholder="Código"><select id="tipo"><option>Entrada</option><option>Saída</option></select><input id="qtd" type="number" placeholder="Quantidade"><input id="minimo" type="number" placeholder="Estoque mínimo"></div><button onclick="salvar()">Salvar</button><button class="danger" onclick="excluirTudo()">Excluir Tudo</button></div>
+<div class="card"><input id="busca" placeholder="Buscar produto..." onkeyup="carregar()"></div>
+<div class="card"><h3>Estoque Atual</h3><table><thead><tr><th>Produto</th><th>Descrição</th><th>Código</th><th>Saldo</th><th>Mínimo</th><th>Status</th><th>Ações</th></tr></thead><tbody id="estoque"></tbody></table></div>
+<div class="card"><h3>Histórico</h3><table><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th></tr></thead><tbody id="historico"></tbody></table></div>
 </div>
-
-<br>
-<button onclick="salvar()">Salvar</button>
- <button onclick="excluirTudo()" style="background:red;">
- Excluir Todos
-</button>
-</div>
-
-<div class="card">
-<h3>Estoque Atual</h3>
-
-<table>
-<thead>
-<tr>
-<th>Produto</th>
-<th>Descrição</th>
-<th>Código</th>
-<th>Saldo</th>
-<th>Mínimo</th>
-<th>Status</th>
-<th>Ações</th>
-</tr>
-</thead>
-<tbody id="estoque"></tbody>
-</table>
-</div>
-
-<div class="card">
-<h3>Histórico</h3>
-
-<table>
-<thead>
-<tr>
-<th>Data</th>
-<th>Produto</th>
-<th>Tipo</th>
-<th>Qtd</th>
-</tr>
-</thead>
-<tbody id="historico"></tbody>
-</table>
-</div>
-
-</div>
-
 <script>
-let estoque = JSON.parse(localStorage.getItem("estoque_bentes") || "{}");
-let historico = JSON.parse(localStorage.getItem("historico_bentes") || "[]");
-
-function salvar(){
-
- let produto = document.getElementById("produto").value.trim();
- let descricao = document.getElementById("descricao").value.trim();
- let codigo = document.getElementById("codigo").value.trim();
- let tipo = document.getElementById("tipo").value;
- let qtd = parseInt(document.getElementById("qtd").value);
- let minimo = parseInt(document.getElementById("minimo").value) || 0;
-
- if(!produto || !codigo || !qtd){
-   alert("Preencha todos os campos");
-   return;
- }
-
- if(!estoque[produto]){
-   estoque[produto] = {
-     descricao:descricao,
-     codigo:codigo,
-     saldo:0,
-     minimo:minimo
-   };
- }
-
- estoque[produto].descricao = descricao;
- estoque[produto].codigo = codigo;
- estoque[produto].minimo = minimo;
-
- if(tipo === "Entrada"){
-   estoque[produto].saldo += qtd;
- }else{
-   estoque[produto].saldo -= qtd;
-
-   if(estoque[produto].saldo < 0){
-      estoque[produto].saldo = 0;
-   }
- }
-
- historico.push({
-   data:new Date().toLocaleString(),
-   produto,
-   tipo,
-   qtd
- });
-
- localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
- localStorage.setItem("historico_bentes", JSON.stringify(historico));
-
- location.reload();
-}
-
-function excluirProduto(produto){
-
- if(confirm("Deseja excluir " + produto + "?")){
-   delete estoque[produto];
-   localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
-   location.reload();
- }
-}
-
-function editarProduto(produto){
-
- let novoNome = prompt("Novo nome:", produto);
- if(!novoNome) return;
-
- let novaDescricao = prompt("Descrição:", estoque[produto].descricao);
- let novoCodigo = prompt("Novo código:", estoque[produto].codigo);
- let novoMinimo = prompt("Novo mínimo:", estoque[produto].minimo);
-
- estoque[novoNome] = {
-   descricao:novaDescricao,
-   codigo:novoCodigo,
-   saldo:estoque[produto].saldo,
-   minimo:parseInt(novoMinimo)
- };
-
- if(novoNome !== produto){
-   delete estoque[produto];
- }
-
- localStorage.setItem("estoque_bentes", JSON.stringify(estoque));
-
- location.reload();
-}
-
-function carregar(){
-
- let html = "";
- let crit = 0;
- let total = 0;
-
- for(let p in estoque){
-
-   total++;
-
-   let item = estoque[p];
-
-   let status = item.saldo <= item.minimo
-      ? "<span class='alerta'>REPOR</span>"
-      : "<span class='ok'>OK</span>";
-
-   if(item.saldo <= item.minimo){
-      crit++;
-   }
-
-   html += `
-   <tr>
-     <td>${p}</td>
-     <td>${item.descricao}</td>
-     <td>${item.codigo}</td>
-     <td>${item.saldo}</td>
-     <td>${item.minimo}</td>
-     <td>${status}</td>
-     <td class="acoes">
-       <button onclick="editarProduto('${p}')">Editar</button>
-       <button onclick="excluirProduto('${p}')">Excluir</button>
-     </td>
-   </tr>
-   `;
- }
-
- document.getElementById("estoque").innerHTML = html;
- document.getElementById("produtos").innerText = total;
- document.getElementById("criticos").innerText = crit;
- document.getElementById("movs").innerText = historico.length;
-
- let hist = "";
-
- historico.slice().reverse().forEach(h=>{
-
-   hist += `
-   <tr>
-     <td>${h.data}</td>
-     <td>${h.produto}</td>
-     <td>${h.tipo}</td>
-     <td>${h.qtd}</td>
-   </tr>
-   `;
- });
-
- document.getElementById("historico").innerHTML = hist;
-}
-
+const sessao=localStorage.getItem('login_bentes');if(sessao!=='ok'){const u=prompt('Usuário:');const s=prompt('Senha:');if(u==='kenedy'&&s==='220718'){localStorage.setItem('login_bentes','ok')}else{alert('Acesso negado');location.reload()}}
+let estoque=JSON.parse(localStorage.getItem('estoque_bentes')||'{}');let historico=JSON.parse(localStorage.getItem('historico_bentes')||'[]');
+function salvarLocal(){localStorage.setItem('estoque_bentes',JSON.stringify(estoque));localStorage.setItem('historico_bentes',JSON.stringify(historico))}
+function v(id){return document.getElementById(id).value.trim()}
+function salvar(){let produto=v('produto'),descricao=v('descricao'),codigo=v('codigo'),tipo=document.getElementById('tipo').value,qtd=parseInt(v('qtd')),minimo=parseInt(v('minimo'))||0;if(!produto||!codigo||!qtd){alert('Preencha os campos');return}if(!estoque[produto])estoque[produto]={descricao,codigo,saldo:0,minimo};estoque[produto].descricao=descricao;estoque[produto].codigo=codigo;estoque[produto].minimo=minimo;estoque[produto].saldo += tipo==='Entrada'?qtd:-qtd;if(estoque[produto].saldo<0)estoque[produto].saldo=0;historico.push({data:new Date().toLocaleString(),produto,tipo,qtd});salvarLocal();carregar()}
+function excluirProduto(p){if(confirm('Excluir '+p+'?')){delete estoque[p];salvarLocal();carregar()}}
+function excluirTudo(){if(confirm('Deseja apagar tudo?')){localStorage.removeItem('estoque_bentes');localStorage.removeItem('historico_bentes');location.reload()}}
+function importarExcelSAP(){const arq=document.getElementById('arquivoExcel').files[0];if(!arq){alert('Selecione o arquivo');return}const reader=new FileReader();reader.onload=e=>{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array'});const sh=wb.Sheets[wb.SheetNames[0]];const linhas=XLSX.utils.sheet_to_json(sh);let total=0;linhas.forEach(item=>{const codigo=item['Nº componente']||'';const descricao=item['Texto breve objeto']||'';const saldo=parseInt(item['Qtd.componente (UMC)']||0);if(codigo&&descricao){estoque[codigo]={descricao,codigo,saldo,minimo:1};total++}});salvarLocal();alert(total+' produtos importados');carregar()};reader.readAsArrayBuffer(arq)}
+function carregar(){let busca=(document.getElementById('busca').value||'').toLowerCase(),html='',hist='',total=0,crit=0;for(let p in estoque){if(!p.toLowerCase().includes(busca)&&!estoque[p].descricao.toLowerCase().includes(busca))continue;let i=estoque[p];total++;let status=i.saldo<=i.minimo?"<span class='alerta'>REPOR</span>":"<span class='ok'>OK</span>";if(i.saldo<=i.minimo)crit++;html+=`<tr><td>${p}</td><td>${i.descricao}</td><td>${i.codigo}</td><td>${i.saldo}</td><td>${i.minimo}</td><td>${status}</td><td><button onclick="excluirProduto('${p}')">Excluir</button></td></tr>`}historico.slice().reverse().forEach(h=>{hist+=`<tr><td>${h.data}</td><td>${h.produto}</td><td>${h.tipo}</td><td>${h.qtd}</td></tr>`});document.getElementById('estoque').innerHTML=html;document.getElementById('historico').innerHTML=hist;document.getElementById('produtos').innerText=total;document.getElementById('criticos').innerText=crit;document.getElementById('movs').innerText=historico.length;document.getElementById('alertaCritico').style.display=crit>0?'block':'none'}
 carregar();
-</script>
-<script>
-function excluirTudo(){
-
- if(confirm("Deseja apagar TODO o estoque e histórico?")){
-
-   localStorage.removeItem("estoque_bentes");
-   localStorage.removeItem("historico_bentes");
-
-   alert("Todos os dados foram apagados!");
-
-   location.reload();
- }
-
-}
 </script>
 </body>
 </html>
