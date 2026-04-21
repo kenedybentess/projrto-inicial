@@ -22,10 +22,24 @@ header{background:linear-gradient(90deg,#0f3d91,#1d5ed8);color:#fff;padding:20px
 <div class="card"><small>Movimentações</small><h2 id="movs">0</h2></div>
 <div class="card"><small>Status</small><h2>Online</h2></div>
 </div>
-<div class="card"><h3>Importar Lista SAP / Excel</h3><input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv"><button onclick="importarExcelSAP()">Importar Arquivo</button></div>
-<div class="card"><h3>Cadastro / Movimentação</h3><div class="grid"><input id="produto" placeholder="Produto"><input id="descricao" placeholder="Descrição"><input id="codigo" placeholder="Código"><select id="tipo"><option>Entrada</option><option>Saída</option></select><input id="qtd" type="number" placeholder="Quantidade"><input id="minimo" type="number" placeholder="Estoque mínimo"></div><button onclick="salvar()">Salvar</button><button class="danger" onclick="excluirTudo()">Excluir Tudo</button></div>
+<div class="card"><h3>Importar Lista SAP / Excel</h3><input type="file" id="arquivoExcel" accept=".xlsx,.xls,.csv"><button onclick="importarExcelSAP()">📥 Importar Arquivo</button></div>
+<div class="card"><h3>Cadastro / Movimentação</h3><div class="grid"><input id="produto" placeholder="Produto"><input id="descricao" placeholder="Descrição"><input id="codigo" placeholder="Código"><select id="tipo"><option>Entrada</option><option>Saída</option></select><input id="qtd" type="number" placeholder="Quantidade"><input id="minimo" type="number" placeholder="Estoque mínimo"></div><button onclick="salvar()">➕ Salvar</button><button class="danger" onclick="excluirTudo()">🗑️ Excluir Tudo</button></div>
 <div class="card"><input id="busca" placeholder="Buscar produto..." onkeyup="carregar()"></div>
 <div class="card"><h3>Estoque Atual</h3><table><thead><tr><th>Produto</th><th>Descrição</th><th>Código</th><th>Saldo</th><th>Mínimo</th><th>Status</th><th>Ações</th></tr></thead><tbody id="estoque"></tbody></table></div>
+<div id="modalEditar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;opacity:0;transition:opacity .25s ease;">
+  <div id="caixaModal" style="background:#fff;width:95%;max-width:520px;padding:22px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:scale(.85);transition:transform .25s ease;">
+    <h3 style="margin-bottom:12px;color:#0f3d91">Editar Produto</h3>
+    <input id="edit_nome" placeholder="Produto">
+    <input id="edit_descricao" placeholder="Descrição">
+    <input id="edit_codigo" placeholder="Código">
+    <input id="edit_saldo" type="number" placeholder="Saldo">
+    <input id="edit_minimo" type="number" placeholder="Estoque mínimo">
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button onclick="salvarEdicao()">💾 Salvar Alterações</button>
+      <button class="danger" onclick="fecharModal()">❌ Cancelar</button>
+    </div>
+  </div>
+</div>
 <div class="card"><h3>Histórico</h3><table><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th></tr></thead><tbody id="historico"></tbody></table></div>
 </div>
 <script>
@@ -35,9 +49,13 @@ function salvarLocal(){localStorage.setItem('estoque_bentes',JSON.stringify(esto
 function v(id){return document.getElementById(id).value.trim()}
 function salvar(){let produto=v('produto'),descricao=v('descricao'),codigo=v('codigo'),tipo=document.getElementById('tipo').value,qtd=parseInt(v('qtd')),minimo=parseInt(v('minimo'))||0;if(!produto||!codigo||!qtd){alert('Preencha os campos');return}if(!estoque[produto])estoque[produto]={descricao,codigo,saldo:0,minimo};estoque[produto].descricao=descricao;estoque[produto].codigo=codigo;estoque[produto].minimo=minimo;estoque[produto].saldo += tipo==='Entrada'?qtd:-qtd;if(estoque[produto].saldo<0)estoque[produto].saldo=0;historico.push({data:new Date().toLocaleString(),produto,tipo,qtd});salvarLocal();carregar()}
 function excluirProduto(p){if(confirm('Excluir '+p+'?')){delete estoque[p];salvarLocal();carregar()}}
+let produtoEditando='';
+function editarProduto(p){produtoEditando=p;const i=estoque[p];document.getElementById('edit_nome').value=p;document.getElementById('edit_descricao').value=i.descricao;document.getElementById('edit_codigo').value=i.codigo;document.getElementById('edit_saldo').value=i.saldo;document.getElementById('edit_minimo').value=i.minimo;const m=document.getElementById('modalEditar');const c=document.getElementById('caixaModal');m.style.display='flex';setTimeout(()=>{m.style.opacity='1';c.style.transform='scale(1)'},10)}
+function fecharModal(){const m=document.getElementById('modalEditar');const c=document.getElementById('caixaModal');m.style.opacity='0';c.style.transform='scale(.85)';setTimeout(()=>{m.style.display='none'},250)}
+function salvarEdicao(){const novo=document.getElementById('edit_nome').value.trim();if(!novo)return;estoque[novo]={descricao:document.getElementById('edit_descricao').value.trim(),codigo:document.getElementById('edit_codigo').value.trim(),saldo:parseInt(document.getElementById('edit_saldo').value)||0,minimo:parseInt(document.getElementById('edit_minimo').value)||0};if(novo!==produtoEditando)delete estoque[produtoEditando];salvarLocal();fecharModal();carregar()}
 function excluirTudo(){if(confirm('Deseja apagar tudo?')){localStorage.removeItem('estoque_bentes');localStorage.removeItem('historico_bentes');location.reload()}}
 function importarExcelSAP(){const arq=document.getElementById('arquivoExcel').files[0];if(!arq){alert('Selecione o arquivo');return}const reader=new FileReader();reader.onload=e=>{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array'});const sh=wb.Sheets[wb.SheetNames[0]];const linhas=XLSX.utils.sheet_to_json(sh);let total=0;linhas.forEach(item=>{const codigo=item['Nº componente']||'';const descricao=item['Texto breve objeto']||'';const saldo=parseInt(item['Qtd.componente (UMC)']||0);if(codigo&&descricao){estoque[codigo]={descricao,codigo,saldo,minimo:1};total++}});salvarLocal();alert(total+' produtos importados');carregar()};reader.readAsArrayBuffer(arq)}
-function carregar(){let busca=(document.getElementById('busca').value||'').toLowerCase(),html='',hist='',total=0,crit=0;for(let p in estoque){if(!p.toLowerCase().includes(busca)&&!estoque[p].descricao.toLowerCase().includes(busca))continue;let i=estoque[p];total++;let status=i.saldo<=i.minimo?"<span class='alerta'>REPOR</span>":"<span class='ok'>OK</span>";if(i.saldo<=i.minimo)crit++;html+=`<tr><td>${p}</td><td>${i.descricao}</td><td>${i.codigo}</td><td>${i.saldo}</td><td>${i.minimo}</td><td>${status}</td><td><button onclick="excluirProduto('${p}')">Excluir</button></td></tr>`}historico.slice().reverse().forEach(h=>{hist+=`<tr><td>${h.data}</td><td>${h.produto}</td><td>${h.tipo}</td><td>${h.qtd}</td></tr>`});document.getElementById('estoque').innerHTML=html;document.getElementById('historico').innerHTML=hist;document.getElementById('produtos').innerText=total;document.getElementById('criticos').innerText=crit;document.getElementById('movs').innerText=historico.length;document.getElementById('alertaCritico').style.display=crit>0?'block':'none'}
+function carregar(){let busca=(document.getElementById('busca').value||'').toLowerCase(),html='',hist='',total=0,crit=0;for(let p in estoque){if(!p.toLowerCase().includes(busca)&&!estoque[p].descricao.toLowerCase().includes(busca))continue;let i=estoque[p];total++;let status=i.saldo<=i.minimo?"<span class='alerta'>REPOR</span>":"<span class='ok'>OK</span>";if(i.saldo<=i.minimo)crit++;html+=`<tr><td>${p}</td><td>${i.descricao}</td><td>${i.codigo}</td><td>${i.saldo}</td><td>${i.minimo}</td><td>${status}</td><td><button onclick="editarProduto('${p}')">✏️ Editar</button> <button class="danger" onclick="excluirProduto('${p}')">🗑️ Excluir</button></td></tr>`}historico.slice().reverse().forEach(h=>{hist+=`<tr><td>${h.data}</td><td>${h.produto}</td><td>${h.tipo}</td><td>${h.qtd}</td></tr>`});document.getElementById('estoque').innerHTML=html;document.getElementById('historico').innerHTML=hist;document.getElementById('produtos').innerText=total;document.getElementById('criticos').innerText=crit;document.getElementById('movs').innerText=historico.length;document.getElementById('alertaCritico').style.display=crit>0?'block':'none'}
 carregar();
 </script>
 </body>
